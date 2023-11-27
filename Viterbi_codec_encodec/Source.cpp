@@ -126,7 +126,7 @@ Encodec_Viterbi::Encodec_Viterbi(vector<int> pols) {
 		}
 	}
 	kl++;
-	max_l_res = pow(2, kl + 2);  // огриначение на кол-во путей в памяти
+	max_l_res = pow(2, kl + 2);  // РѕРіСЂР°РЅРёС‡РµРЅРёРµ РЅР° РєРѕР»-РІРѕ РїСѓС‚РµР№ РґРµСЂР¶Р°С‰РёС… РІ РїР°РјСЏС‚Рё
 }
 Encodec_Viterbi::~Encodec_Viterbi() {
 }
@@ -140,20 +140,20 @@ void Encodec_Viterbi::filling_matrix_weight() {
 		matrix_weight.push_back(tmp);
 	}
 
-	for (int i = 0; i < pow(2, kl); ++i) { // перебор всех вариантов регистра
-		for (int j = 0; j < 2; ++j) { // перебор вариантов пришедших битов за шаг 
+	for (int i = 0; i < pow(2, kl); ++i) { // РїРµСЂРµР±РѕСЂ РІСЃРµС… РІР°СЂРёР°РЅС‚РѕРІ СЂРµРіРёСЃС‚СЂР°
+		for (int j = 0; j < 2; ++j) { // РїРµСЂРµР±РѕСЂ РІР°СЂРёРЅР°С‚РѕРІ РїСЂРёС€РµРґС€РёС… Р·Р° С€Р°Рі
 			int u = i;
 			u += j << kl;
 			matrix_weight[i][u >> 1] = 0;
-			for (int x = 0; x < polynom.size(); ++x) { //получение выходных битов
-				char b = polynom[x] & u; // выход регистра 
+			for (int x = 0; x < polynom.size(); ++x) { //РїРѕР»СѓС‡РµРЅРёРµ РІС‹С…РѕРґРЅС‹С… Р±РёС‚
+				char b = polynom[x] & u; // РІС‹С…РѕРґ СЂРµРіРёСЃС‚Р°СЂ
 				int count = 0;
 				matrix_weight[i][u >> 1] = matrix_weight[i][u >> 1] << 1;
-				for (; b > 0; b = b >> 1) { // подсчет 1чек
+				for (; b > 0; b = b >> 1) { // РїРѕРґСЃС‡РµС‚ 1С‡РµРє
 					if (b % 2 == 1)
 						count++;
 				}
-				if (count % 2 == 1)  // бит выхода
+				if (count % 2 == 1)  // Р±РёС‚ РІС‹С…РѕРґР°
 					matrix_weight[i][u >> 1] += 1;
 			}
 		}
@@ -184,11 +184,10 @@ string Encodec_Viterbi::encodec(string in) {
 	vector<int> weight_paths = { 0 };
 	int min = INT_MAX, ind = 0;
 
-	// в случае если не все сообщение декодированно
 	for (int n_byts = 0; n_byts < input.size(); ++n_byts) {
 		vector<int> weight_paths_sort = weight_paths;
 		sort(weight_paths_sort.begin(), weight_paths_sort.end());
-		// проверка на большое кол-во путей в памяти -> удаление путей с большим весом
+		// РїСЂРѕРІРµСЂРєР° РЅР° Р±РѕР»СЊС€РѕРµ РєРѕР»-РІРѕ РїСѓС‚РµР№ РІ РїР°РјСЏС‚Рё -> СѓРґР°Р»РµРЅРёРµ РїСѓРµС‚Р№ СЃ Р±РѕР»СЊС€РёРј РІРµСЃРѕРј
 		for (; paths.size() > max_l_res;) {
 			for (int i = 0; i < weight_paths.size() and paths.size() > max_l_res; ++i) {
 				if (weight_paths[i] >= weight_paths_sort[weight_paths_sort.size() / 2]) {
@@ -198,7 +197,7 @@ string Encodec_Viterbi::encodec(string in) {
 				}
 			}
 		}
-		// добавление новых путей 
+		// РґРѕР±Р°РІР»РµРЅРёРµ РЅРѕРІС‹С… РїСѓС‚РµР№
 		int len_res = paths.size();
 		for (int i = 0; i < len_res; ++i) {
 			vector<int> tmp_p = paths[i];
@@ -217,7 +216,7 @@ string Encodec_Viterbi::encodec(string in) {
 		paths.erase(paths.begin(), paths.begin() + len_res);
 		weight_paths.erase(weight_paths.begin(), weight_paths.begin() + len_res);
 	}
-	//поиск пути с минимальным весом
+	// РїРѕРёСЃРє РїСѓС‚Рё СЃ РјРёРЅРёРјР°Р»СЊРЅС‹Рј РІРµСЃРѕРј
 	for (int i = 0; i < paths.size(); ++i) {
 		for (int j = 1; j < paths[i].size(); ++j) {
 			weight_paths[i] += one(matrix_weight[paths[i][j - 1]][paths[i][j]] ^ input[j - 1]);
